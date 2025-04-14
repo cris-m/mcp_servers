@@ -1,0 +1,19 @@
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+mcp[cli]
+
+tqdm
+langchain
+langchain-tavily
+langchain-community
+beautifulsoup4
+lxml
+playwright
+selenium
+duckduckgo-search
+# google-search-results
+wikipedia
+python-dotenv
+unstructured
+langchain-google-community
