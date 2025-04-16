@@ -61,19 +61,56 @@ class GmailManager:
 
         return build("gmail", "v1", credentials=self.creds)
 
-    def list_emails(self, max_results=10, label_ids=None, query=None):
-        if label_ids is None:
-            label_ids = ["INBOX"]
+    def list_emails(
+        self,
+        max_results=50,
+        label_ids=None,
+        query=None,
+        include_spam_trash=False,
+        page_token=None,
+    ):
+        try:
+            if query and label_ids is None:
+                label_ids = ["INBOX"]
+            elif label_ids is None:
+                label_ids = ["INBOX"]
 
-        results = (
-            self.service.users()
-            .messages()
-            .list(userId="me", maxResults=max_results, labelIds=label_ids, q=query)
-            .execute()
-        )
+            params = {
+                "userId": "me",
+                "maxResults": max_results,
+                "includeSpamTrash": include_spam_trash,
+            }
 
-        messages = results.get("messages", [])
-        return messages
+            if label_ids:
+                params["labelIds"] = label_ids
+            if query:
+                params["q"] = query
+            if page_token:
+                params["pageToken"] = page_token
+
+            results = self.service.users().messages().list(**params).execute()
+
+            messages = results.get("messages", [])
+            next_page_token = results.get("nextPageToken")
+
+            return {
+                "messages": messages,
+                "next_page_token": next_page_token,
+                "has_more": next_page_token is not None,
+            }
+
+        except Exception as e:
+            import traceback
+
+            error_details = traceback.format_exc()
+            print(f"Error listing emails: {str(e)}")
+            print(error_details)
+            return {
+                "messages": [],
+                "next_page_token": None,
+                "has_more": False,
+                "error": str(e),
+            }
 
     def get_email_details(self, msg_id):
         message = (
@@ -137,24 +174,14 @@ class GmailManager:
 
         return ""
 
-    def get_unread_emails(self, max_results=10):
-        unread_msgs = self.list_emails(
+    def get_unread_emails(self, max_results=50):
+        response = self.list_emails(
             max_results=max_results, label_ids=["UNREAD", "INBOX"]
         )
 
         emails = []
-        for msg in unread_msgs:
-            message = self.get_email_details(msg["id"])
-            email_data = self.parse_email_content(message)
-            if email_data:
-                emails.append(email_data)
+        messages = response.get("messages", [])
 
-        return emails
-
-    def search_emails(self, query, max_results=10):
-        messages = self.list_emails(max_results=max_results, query=query)
-
-        emails = []
         for msg in messages:
             message = self.get_email_details(msg["id"])
             email_data = self.parse_email_content(message)
@@ -162,6 +189,65 @@ class GmailManager:
                 emails.append(email_data)
 
         return emails
+
+    def search_emails(self, query, max_total=None):
+        try:
+            all_messages = []
+            page_token = None
+            results_per_page = min(100, max_total or 100)
+
+            while True:
+                result = self.list_emails(
+                    max_results=results_per_page, query=query, page_token=page_token
+                )
+
+                if "error" in result:
+                    return {
+                        "success": False,
+                        "error": result["error"],
+                        "message": "Error during paginated search",
+                    }
+
+                messages = result.get("messages", [])
+                all_messages.extend(messages)
+
+                if max_total and len(all_messages) >= max_total:
+                    all_messages = all_messages[:max_total]
+                    break
+
+                page_token = result.get("next_page_token")
+                if not page_token or not result.get("has_more", False):
+                    break
+
+            emails = []
+            for msg in all_messages:
+                try:
+                    message = self.get_email_details(msg["id"])
+                    email_data = self.parse_email_content(message)
+                    if email_data:
+                        emails.append(email_data)
+                except Exception as e:
+                    print(f"Error processing message {msg['id']}: {str(e)}")
+                    continue
+
+            return {
+                "success": True,
+                "emails": emails,
+                "count": len(emails),
+                "message": f"Found {len(emails)} emails matching query: '{query}'",
+            }
+
+        except Exception as e:
+            import traceback
+
+            error_details = traceback.format_exc()
+            print(f"Error in paginated search: {str(e)}")
+            print(error_details)
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed during paginated search",
+            }
 
     def mark_as_read(self, msg_id):
         return (

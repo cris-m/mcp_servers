@@ -73,8 +73,69 @@ class GmailMCP:
                 logging.error(f"Failed to send email: {str(e)}")
                 return {"success": False, "error": str(e)}
 
+        @self.mcp.tool("list_emails")
+        def list_emails(
+            max_results: int = 50,
+            label_ids: list = None,
+            query: str = None,
+            include_spam_trash: bool = False,
+        ):
+            """List emails from Gmail with filtering options.
+
+            Args:
+                max_results: Maximum number of emails to return (default: 50)
+                label_ids: List of Gmail label IDs to filter by (default: ["INBOX"])
+                query: Search string to find matching emails
+                include_spam_trash: Whether to include messages from SPAM and TRASH folders
+
+            Return: Dictionary containing success status and either a list of matching emails or an error message
+            """
+            try:
+                result = self.gmail.list_emails(
+                    max_results=max_results,
+                    label_ids=label_ids,
+                    query=query,
+                    include_spam_trash=include_spam_trash,
+                )
+
+                # Process messages to get full email details
+                emails = []
+                for msg in result.get("messages", []):
+                    message = self.gmail.get_email_details(msg["id"])
+                    email_data = self.gmail.parse_email_content(message)
+                    if email_data:
+                        emails.append(email_data)
+
+                return {
+                    "success": True,
+                    "emails": emails,
+                    "count": len(emails),
+                    "has_more": result.get("has_more", False),
+                    "next_page_token": result.get("next_page_token"),
+                }
+            except Exception as e:
+                logging.error(f"Failed to list emails: {str(e)}")
+                return {"success": False, "error": str(e)}
+
+        @self.mcp.tool("search_emails")
+        def search_emails(query: str, max_results: int = 50):
+            """Search emails in Gmail using the provided query.
+
+            Args:
+            query: Search string to find matching emails
+            max_results: Maximum number of emails to return (default: 50)
+
+            Return: Dictionary containing success status and either a list of matching emails or an error message
+            """
+            try:
+                emails = self.gmail.search_emails(query, max_results)
+                return {"success": True, "emails": emails}
+            except Exception as e:
+                logging.error(f"Failed to get unread emails: {str(e)}")
+                return {"success": False, "error": str(e)}
+
         @self.mcp.tool("get_unread_emails")
-        def get_unread_emails(max_results: int = 10):
+        def get_unread_emails(max_results: int = 50):
             """Get a list of unread emails.
 
             Args:

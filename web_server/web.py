@@ -115,7 +115,7 @@ class Web:
             loader = WebBaseLoader(
                 web_paths=url_paths,
                 requests_kwargs={"headers": {"User-Agent": self.user_agent}},
-                bs_kwargs={"parse_only": bs4.SoupStrainer(), "features": "xml"},
+                bs_kwargs={"parse_only": bs4.SoupStrainer()},
                 bs_get_text_kwargs={"separator": " | ", "strip": True},
             )
 
