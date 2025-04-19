@@ -1,10 +1,9 @@
 import os
 import re
-from typing import List, Optional
+from typing import List
 
 import bs4
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 from langchain_community.document_loaders import (
     PlaywrightURLLoader,
     SeleniumURLLoader,
@@ -24,15 +23,13 @@ from langchain_tavily import TavilySearch
 class Web:
     def __init__(
         self,
-        user_agent: Optional[str] = None,
-        search_engine: str = "tavily",
+        search_engine: str,
+        user_agent: str = None,
         max_results: int = 10,
         load_js: bool = False,
         use_playwright: bool = False,
         use_selenium: bool = False,
     ):
-        load_dotenv()
-
         self.user_agent = (
             user_agent
             or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"

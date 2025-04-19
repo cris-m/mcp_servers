@@ -1,127 +1,222 @@
-# Web
+# Web MCP
 
-A versatile web server that provides comprehensive tools for web crawling, searching, and content loading through multiple search engines.
+A Model Context Protocol (MCP) server for web operations that provides a secure and controlled way for AI assistants to interact with web content, search engines, and URLs.
+
+## Overview
+
+Web MCP is built on the [Model Context Protocol](https://github.com/modelcontextprotocol/python-sdk) and provides tools for:
+
+- Searching the web using various search engines
+- Loading content from URLs
+- Extracting content from sitemaps
+- Configuring web client settings and behavior
+
+The server includes support for multiple search engines and browser automation tools to enhance web content retrieval.
 
 ## Features
 
-- Web searching with support for:
-  - Multiple search engines (Tavily, Google, Bing, DuckDuckGo)
-  - Configurable result limits
-  - Advanced search parameters
-- Content loading capabilities:
-  - Single and multiple URL loading
-  - Sitemap parsing
-  - Recursive crawling
-  - JavaScript rendering support
-- Browser automation options:
-  - Playwright integration
-  - Selenium support
-  - Configurable user agents
-
-## Setup
-
-1. Set up API credentials:
-   - Tavily API: Register at [Tavily](https://tavily.io/)
-   - Google Custom Search: Configure at [Google Cloud Console](https://console.cloud.google.com/)
-   - Bing Search: Get API key from [Bing Web Search API](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api)
-
-2. Configure environment:
-   - Create `.env` file in the web_server directory
-   - Add your API keys and default settings
-   - Install required packages
-
-## Usage Examples
-
-### Starting the Server
-```python
-from web_server.web import Web
-
-web_client = Web(
-    search_engine="tavily",
-    max_results=10,
-    load_js=False,
-    use_playwright=True
-)
-web_client.run()
-```
-
-### Performing Web Searches
-```python
-# Basic search
-results = await web_client.search(
-    query="python programming",
-    max_results=5
-)
-
-# Advanced search with specific engine
-results = await web_client.search(
-    query="machine learning tutorials",
-    search_engine="google",
-    max_results=10
-)
-```
-
-### Loading Content
-```python
-# Load single URL
-content = await web_client.load_url(
-    url_paths=["https://example.com"]
-)
-
-# Load multiple URLs recursively
-content = await web_client.load_url(
-    url_paths=["https://example.com"],
-    recursive=True,
-    depth=2
-)
-
-# Load sitemap
-content = await web_client.load_sitemap(
-    "https://example.com/sitemap.xml"
-)
-```
-
-### Configuration Examples
-```python
-# Configure web client
-web_client.configure_web(
-    user_agent="Custom User Agent",
-    search_engine="tavily",
-    max_results=15,
-    load_js=True,
-    use_playwright=True
-)
-```
-
-## Required Environment Variables
-```bash
-# API Keys
-TAVILY_API_KEY=your_tavily_key
-GOOGLE_API_KEY=your_google_key
-GOOGLE_CSE_ID=your_cse_id
-BING_SUBSCRIPTION_KEY=your_bing_key
-
-# Default Settings
-DEFAULT_SEARCH_ENGINE=tavily
-DEFAULT_MAX_RESULTS=10
-DEFAULT_USER_AGENT=Mozilla/5.0
-DEFAULT_LOAD_JS=false
-DEFAULT_USE_PLAYWRIGHT=true
-DEFAULT_USE_SELENIUM=false
-```
+- **Multiple Search Engines**: Support for Tavily, Google, Bing, DuckDuckGo, and Wikipedia
+- **URL Content Loading**: Retrieve content from single or multiple URLs
+- **Sitemap Extraction**: Parse and load content from website sitemaps
+- **Configurable Settings**: Adjust user agent, search parameters, and browser automation
+- **JavaScript Support**: Option to load JavaScript-rendered content
+- **Browser Automation**: Support for Playwright and Selenium for advanced content retrieval
+- **Progress Tracking**: Support for progress reporting during long-running operations
 
 ## Installation
 
-```bash
-# Install required packages
-pip install fastmcp python-dotenv requests beautifulsoup4 playwright selenium google-search-results langchain-tavily
+1. Clone this repository
+2. Create a Python virtual environment:
+   ```bash
+   python -m venv env
+   source env/bin/activate  # On Windows: env\Scripts\activate
+   ```
+3. Install the required dependencies:
+   ```bash
+   pip install fastmcp python-dotenv requests beautifulsoup4 playwright selenium google-search-results langchain-tavily
+   ```
+4. Install Playwright browsers:
+   ```bash
+   python -m playwright install
+   ```
 
-# Install Playwright browsers
-python -m playwright install
+## Setting Up Search API Keys
+
+The Web MCP server requires API keys for the search engines you want to use. Here's how to set up the most common ones:
+
+### Tavily API Key
+
+1. Visit [Tavily AI](https://tavily.com/) and sign up for an account
+2. Navigate to your dashboard to obtain your API key
+3. Set the environment variable:
+   ```bash
+   export TAVILY_API_KEY=your_api_key_here
+   ```
+
+### Google Custom Search Engine
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project and enable the Custom Search API
+3. Create API credentials to get your API key
+4. Go to the [Programmable Search Engine](https://programmablesearchengine.google.com/) site
+5. Create a new search engine and get your Search Engine ID
+6. Set the environment variables:
+   ```bash
+   export GOOGLE_API_KEY=your_api_key_here
+   export GOOGLE_CSE_ID=your_search_engine_id_here
+   ```
+
+### Bing Search API
+
+1. Go to the [Microsoft Azure Portal](https://portal.azure.com/)
+2. Create a Bing Search resource
+3. Obtain your API key and endpoint URL from the resource overview
+4. Set the environment variables:
+   ```bash
+   export BING_SUBSCRIPTION_KEY=your_api_key_here
+   export BING_SEARCH_URL=your_endpoint_url_here
+   ```
+
+## Configuration
+
+The server can be configured in several ways:
+
+### Command Line Arguments
+
+```bash
+python server.py --search-engine tavily --max-results 20 --user-agent "Mozilla/5.0..." --use-playwright
 ```
 
-## Security Notes
-- Store API keys securely in `.env`
-- Never commit sensitive credentials
-- Implement rate limiting for production use
-- Keep dependencies updated
+### Environment Variables
+
+```bash
+export SEARCH_ENGINE=tavily
+export MAX_RESULTS=20
+export USER_AGENT="Mozilla/5.0..."
+export USE_PLAYWRIGHT=true
+python server.py
+```
+
+### MCP Configuration File (mcp.json)
+
+```json
+{
+  "mcpServers": {
+    "web-mcp": {
+      "command": "path/to/python",
+      "args": [
+        "path/to/server.py",
+        "--search-engine",
+        "tavily",
+        "--max-results",
+        "20",
+        // "--load-js",
+		// "--use-playwright",
+		// "--use-selenium"
+      ],
+      "env": {
+         // "TAVILY_API_KEY": "your_api_key_here",
+         "USER_AGENT": "Mozilla/5.0...",
+         // "SEARCH_ENGINE": "tavily",
+         // "MAX_RESULTS": "20",
+         // "LOAD_JS": "true",
+         // "USE_PLAYWRIGHT": "true"
+      }
+    }
+  }
+}
+```
+
+**Note about configuration:**
+- The `--search-engine` or `SEARCH_ENGINE` parameter is required
+- Depending on which search engine you choose, you'll need to set the appropriate API key environment variables
+
+## Security Features
+
+The Web MCP implements security measures:
+
+- Configurable user agent to control browser identification
+- Options to use Playwright or Selenium for secure browser automation
+- Progress reporting for transparency during operations
+- Error handling with detailed logging
+
+## Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `search` | Searches the web using the configured search engine |
+| `load_url` | Loads content from one or more URLs with optional recursive loading |
+| `load_sitemap` | Extracts and loads content from a website's sitemap |
+| `configure_web` | Configures web client settings (search engine, user agent, etc.) |
+
+## Example Usage
+
+When connected to an AI assistant, you can use commands like:
+
+```
+Search for recent news about artificial intelligence
+```
+
+```
+Load the content from https://example.com
+```
+
+```
+Extract information from the sitemap at https://example.com/sitemap.xml
+```
+
+```
+Configure the web client to use Google search with 10 max results
+```
+
+## Browser Automation Options
+
+The Web MCP server supports multiple approaches for loading web content:
+
+- **Basic HTTP requests**: Default for simple content retrieval
+- **Playwright**: Recommended for JavaScript-heavy websites (enable with `--use-playwright`)
+- **Selenium**: Alternative browser automation option (enable with `--use-selenium`)
+
+You can also enable JavaScript processing with the `--load-js` flag, which works in conjunction with browser automation.
+
+## Customization
+
+You can customize the server by modifying:
+
+- The Web implementation in `web.py`
+- Default search engines and parameters
+- Browser automation behavior
+- Error handling and logging
+
+## Troubleshooting
+
+If you encounter errors:
+
+1. Check that the required API keys are correctly set as environment variables
+2. Verify that the search engine parameter is correctly specified
+3. Look for error messages in the server output (redirected to stderr)
+4. For Playwright or Selenium issues, ensure the browser dependencies are correctly installed
+
+## Contributing
+
+Contributions are welcome! Please follow the standard GitHub workflow:
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request with your changes
+
+## Running with Inspector
+
+You can run the server using the MCP Inspector tool:
+
+```bash
+mcp dev server.py:main
+```
+
+When configuring in the Inspector, use these settings:
+
+- Transport Type: STUDIO
+- Command: python
+- Arguments: server.py --search-engine tavily --max-results 20
+
+*Note: This server provides access to web content and search functionality. Use appropriate API keys and configure search engines according to your use case.*
