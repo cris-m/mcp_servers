@@ -37,7 +37,7 @@ The server includes robust security features to prevent unauthorized access to s
    ```
 3. Install the required dependencies:
    ```bash
-   pip install "mcp[cli] uv"
+   pip install "mcp[cli] uv markitdown[pdf, docx, pptx, xlsx, xls]"
    ```
 
 ---

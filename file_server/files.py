@@ -3,6 +3,8 @@ import mimetypes
 import os
 import re
 
+from markitdown import MarkItDown
+
 
 class FileManager:
     DEFAULT_IGNORE_PATTERNS = {
@@ -25,6 +27,60 @@ class FileManager:
         "database": ["*.sqlite*", "*.db*", "*.mdb"],
         "archives": ["*.tar", "*.gz", "*.zip", "*.rar", "*.7z", "*.bz2"],
         "development": ["*.min.*", "*.map"],
+    }
+
+    SUPPORTED_MIME_TYPES = {
+        "text": [
+            "text/plain",
+            "text/markdown",
+            "text/x-python",
+            "application/javascript",
+            "text/javascript",
+            "text/html",
+            "text/css",
+            "application/json",
+            "text/json",
+            "application/xml",
+            "text/xml",
+            "text/csv",
+            "text/x-log",
+            "text/x-ini",
+            "text/x-config",
+            "text/x-typescript",
+            "text/typescript",
+            "application/typescript",
+            "text/x-c",
+            "text/x-c++",
+            "text/x-csharp",
+            "text/x-scss",
+            "text/x-sass",
+            "text/x-yaml",
+            "text/x-yml",
+            "application/x-yaml",
+            "text/x-java",
+            "text/x-php",
+            "text/x-ruby",
+            "text/x-go",
+            "text/x-rust",
+            "text/x-kotlin",
+            "text/x-swift",
+            "text/x-perl",
+            "text/x-shellscript",
+            "text/x-dockerfile",
+        ],
+        "documents": [
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/rtf",
+            "application/vnd.oasis.opendocument.text",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/vnd.oasis.opendocument.presentation",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.oasis.opendocument.spreadsheet",
+            "application/pdf",
+        ],
     }
 
     DEFAULT_RESTRICTED_PATHS = [
@@ -53,6 +109,7 @@ class FileManager:
         include_defaults=True,
     ):
         self.root_folders = self._initialize_root_folders(root_folders)
+        self.markitdown = MarkItDown(enable_plugins=False)
 
         self.restricted_folders, self.restricted_files = self._initialize_restrictions(
             restricted_folders, restricted_files, ignore_patterns, include_defaults
@@ -236,13 +293,13 @@ class FileManager:
             ".7z",
             ".rar",
             ".iso",
-            ".pdf",
-            ".doc",
-            ".docx",
-            ".xls",
-            ".xlsx",
-            ".ppt",
-            ".pptx",
+            # ".pdf",
+            # ".doc",
+            # ".docx",
+            # ".xls",
+            # ".xlsx",
+            # ".ppt",
+            # ".pptx",
             ".db",
             ".sqlite",
             ".mdb",
@@ -250,6 +307,18 @@ class FileManager:
         }
         ext = os.path.splitext(path)[1].lower()
         return ext in binary_extensions
+
+    def _convert_to_markdown(self, path: str) -> str:
+        validated_path = self._validate_path(path)
+
+        if not os.path.isfile(validated_path):
+            raise FileNotFoundError(f"File not found: {validated_path}")
+
+        try:
+            result = self.markitdown.convert(validated_path)
+            return result.text_content
+        except Exception as e:
+            raise RuntimeError(f"Failed to convert file to markdown: {str(e)}")
 
     def list_files(self, path=None, depth=1):
         result = []
@@ -282,15 +351,6 @@ class FileManager:
                         result.append(full_path)
 
         return result
-
-    def read_file(self, path):
-        validated_path = self._validate_path(path)
-
-        if not os.path.isfile(validated_path):
-            raise ValueError(f"{validated_path} is not a file")
-
-        with open(validated_path, "r", encoding="utf-8") as file:
-            return file.read()
 
     def get_file_info(self, path):
         validated_path = self._validate_path(path)
@@ -429,3 +489,42 @@ class FileManager:
             progress_callback(100, 100)
 
         return result
+
+    def read_file(self, path: str) -> str:
+        validated_path = self._validate_path(path)
+        if not os.path.isfile(validated_path):
+            raise ValueError(f"{validated_path} is not a file.")
+
+        mime_type = self.get_file_mimetype(validated_path)
+
+        file_category = None
+        for category, mime_types in self.SUPPORTED_MIME_TYPES.items():
+            if any(mime_type.startswith(m) for m in mime_types):
+                file_category = category
+                break
+
+        if not file_category:
+            raise ValueError(f"File format not supported: {mime_type}")
+
+        if file_category != "text" and self.markitdown:
+            try:
+                markdown_content = self._convert_to_markdown(validated_path)
+                return markdown_content
+            except Exception as e:
+                raise ValueError(f"Failed to convert file to markdown: {str(e)}")
+
+        if file_category == "text":
+            encodings = ["utf-8", "latin-1", "cp1252", "iso-8859-1"]
+            for encoding in encodings:
+                try:
+                    with open(validated_path, "r", encoding=encoding) as file:
+                        return file.read()
+                except UnicodeDecodeError:
+                    continue
+            try:
+                with open(validated_path, "rb") as file:
+                    return file.read().decode("utf-8", errors="ignore")
+            except IOError as e:
+                raise IOError(f"Failed to read file with any encoding: {str(e)}")
+
+        raise ValueError(f"Cannot read content for file type: {mime_type}")
