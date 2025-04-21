@@ -1,35 +1,36 @@
 # Model Context Protocol (MCP) Servers
 
-A collection of Model Context Protocol (MCP) servers that extend AI assistants with secure and controlled access to external systems and data sources.
+A collection of Model Context Protocol (MCP) servers designed to extend AI assistants with secure and controlled access to external systems and data sources.
 
 ## Overview
 
-This repository contains multiple MCP servers built on the [Model Context Protocol](https://github.com/modelcontextprotocol/python-sdk) framework. Each server provides tools for AI assistants to interact with different types of systems:
+This repository hosts several MCP servers built on the [Model Context Protocol](https://github.com/modelcontextprotocol/python-sdk) framework. Each server enables AI assistants to interact with various external systems:
 
-- **File MCP**: Access and manipulate files on your local file system
-- **Gmail MCP**: Interact with Gmail for email management
-- **Web MCP**: Search the web and access online content
+- **File MCP**: Access and manipulate files on the local file system  
+- **Gmail MCP**: Manage and interact with Gmail accounts  
+- **Web MCP**: Search the internet and retrieve online content  
+- **Voice MCP**: Generate lifelike text-to-speech audio using advanced voice synthesis
 
-These servers can be integrated with AI applications that support the MCP standard, such as Cursor, Claude Desktop, and other MCP-compatible assistants.
+These servers are compatible with MCP-enabled AI tools such as Cursor, Claude Desktop, and other assistants that support the protocol.
 
 ## Features
 
-- **AI Integration**: Extend your AI assistants with powerful file, email, and web capabilities
-- **Modular Architecture**: Use the servers independently or combine them based on your needs
-- **Secure Access**: Controlled access to sensitive systems with robust security features
-- **Rich Functionality**: Comprehensive tools for each system domain
-- **Progress Tracking**: Real-time progress reporting for long-running operations
-- **Consistent Interface**: Uniform API design across all servers
+- **AI Integration**: Seamlessly extend AI assistants with file, email, web, and voice capabilities  
+- **Modular Architecture**: Deploy servers independently or in combination  
+- **Secure Access**: Built-in security controls to safeguard sensitive systems  
+- **Rich Functionality**: Comprehensive toolsets tailored to each domain  
+- **Progress Reporting**: Real-time updates for long-running tasks  
+- **Consistent Interface**: Unified API design for ease of integration
 
 ## Installation
 
-1. Clone this repository
-2. Create a Python virtual environment:
+1. Clone the repository.
+2. Create and activate a virtual environment:
    ```bash
    python -m venv env
    source env/bin/activate  # On Windows: env\Scripts\activate
    ```
-3. Install the common dependencies:
+3. Install dependencies:
    ```bash
    pip install -r requirements.txt
    python -m playwright install
@@ -37,18 +38,42 @@ These servers can be integrated with AI applications that support the MCP standa
 
 ## Server Configuration
 
-Each server requires specific configuration. Here's a quick summary:
+Each server has its own configuration requirements:
+
+### Voice MCP
+
+Powered by Kokoro TTS with multilingual, multi-voice capabilities.
+
+**System Dependencies**  
+- **Linux**:  
+  ```bash
+  sudo apt-get install espeak-ng
+  ```  
+- **Windows/macOS**: Install `espeak-ng` via your preferred package manager.
+
+Install Python dependencies:
+```bash
+pip install mcp[cli] uv dotenv kokoro>=0.9.2 soundfile sounddevice
+pip install misaki[zh,ja]  # for Japanese and Chinese support
+```
+
+Set environment variables:
+```bash
+export VOICE_LANG=us
+export VOICE_NAME=af_nicole
+export VOICE_SAMPLE_RATE=24000
+```
 
 ### File MCP
 
-Requires root folder paths to define which directories the AI can access:
+Define root folders accessible by the assistant:
 ```bash
 export MCP_ROOT_FOLDERS="/path/to/folder1;/path/to/folder2"
 ```
 
 ### Gmail MCP
 
-Requires Google API credentials and token storage:
+Requires Google API credentials and token:
 ```bash
 export GMAIL_CREDENTIALS_PATH="/path/to/credentials.json"
 export GMAIL_TOKEN_PATH="/path/to/token.pickle"
@@ -56,7 +81,7 @@ export GMAIL_TOKEN_PATH="/path/to/token.pickle"
 
 ### Web MCP
 
-Requires search engine configuration, API keys, and browser automation settings:
+Configure search engines and browser automation settings:
 
 ```bash
 # Search Engine API Keys
@@ -66,27 +91,41 @@ export GOOGLE_CSE_ID="your_custom_search_engine_id"
 export BING_SUBSCRIPTION_KEY="your_bing_api_key"
 export BING_SEARCH_URL="your_bing_endpoint_url"
 
-# Search Configuration
+# Search Settings
 export SEARCH_ENGINE="tavily"
 export MAX_RESULTS="20"
 
-# Browser Automation Settings
+# Browser Automation
 export LOAD_JS="true"
-export USE_PLAYWRIGHT="true"  # Enable Playwright for browser automation
-export USE_SELENIUM="false"   # Or use Selenium instead of Playwright
+export USE_PLAYWRIGHT="true"
+export USE_SELENIUM="false"
 ```
 
 ## Integration with AI Applications
 
-These MCP servers can be integrated with various AI applications that support the Model Context Protocol:
+These servers can be integrated into any MCP-compatible AI environment.
 
 ### Unified MCP Configuration
 
-Create an `mcp_config.json` file with your configuration to use with MCP-compatible applications:
+Create an `mcp_config.json` file with your server configurations:
 
 ```json
 {
   "mcpServers": {
+    "voice-mcp": {
+      "command": "python",
+      "args": [
+        "voice_server.py",
+        "--lang", "us",
+        "--voice", "af_nicole",
+        "--sample-rate", "24000"
+      ],
+      "env": {
+        // "VOICE_LANG": "us",
+        // "VOICE_NAME": "af_nicole",
+        // "VOICE_SAMPLE_RATE": "24000"
+      }
+    },
     "file-mcp": {
       "command": "python",
       "args": [
@@ -130,40 +169,47 @@ Create an `mcp_config.json` file with your configuration to use with MCP-compati
 }
 ```
 
-### Adding to AI Applications
+### Integration Instructions
 
-- **Claude Desktop**: In settings, add your MCP servers through the MCP configuration section
-- **Cursor**: Configure MCP servers in the application settings
-- **Custom Applications**: Use the MCP SDK to connect to these servers programmatically
+- **Claude Desktop**: Add MCP configurations via the app settings  
+- **Cursor**: Configure MCP servers through the built-in settings UI  
+- **Custom Applications**: Use the [MCP SDK](https://github.com/modelcontextprotocol/python-sdk) for integration
 
 ## Available Tools by Server
 
+### Voice MCP
+- `play_audio`: Convert text to speech and play it in-memory
+
 ### File MCP
-- `list_files`: Lists files in a directory
-- `read_file`: Reads file content
-- `get_file_info`: Gets file metadata
-- `get_file_mimetype`: Determines file MIME type
-- `search_files_by_name`: Searches files by name pattern
-- `search_files_by_content`: Searches files by content
+- `list_files`: Browse directory contents  
+- `read_file`: Read content of files  
+- `get_file_info`: Access file metadata  
+- `get_file_mimetype`: Detect MIME types  
+- `search_files_by_name`: Search by filename  
+- `search_files_by_content`: Search by file content
 
 ### Gmail MCP
-- `send_email`: Sends emails with attachments
-- `list_emails`: Lists emails with filtering
-- `search_emails`: Searches for specific emails
-- `get_unread_emails`: Gets unread emails
-- `mark_as_read`: Marks emails as read
-- `delete_email`: Deletes specific emails
-- `batch_delete_emails`: Deletes multiple emails
+- `send_email`: Send messages with attachments  
+- `list_emails`: View inbox or folders  
+- `search_emails`: Find specific emails  
+- `get_unread_emails`: Check unread messages  
+- `mark_as_read`: Mark messages as read  
+- `delete_email`: Remove specific emails  
+- `batch_delete_emails`: Bulk delete emails
 
 ### Web MCP
-- `search`: Searches the web using configured engine
-- `load_url`: Loads content from URLs
-- `load_sitemap`: Extracts content from sitemaps
-- `configure_web`: Configures web client settings
+- `search`: Perform search queries  
+- `load_url`: Fetch content from a URL  
+- `load_sitemap`: Extract URLs from sitemaps  
+- `configure_web`: Update client settings
 
 ## Example AI Interactions
 
-When connected to an AI assistant with all servers, you can use natural language commands like:
+With all MCP servers active, assistants can execute natural-language commands like:
+
+```
+"Play a poem about autumn in a French accent"
+```
 
 ```
 "Find all documents in my Downloads folder related to budget planning"
@@ -183,29 +229,29 @@ When connected to an AI assistant with all servers, you can use natural language
 
 ## Security Considerations
 
-When integrating these MCP servers with AI applications:
+To ensure secure deployment:
 
-- Use separate user accounts for different contexts/applications
-- Restrict file access to specific directories
-- Manage API keys securely using environment variables
-- Avoid exposing sensitive Gmail credentials in multi-user environments
-- Consider network security for web access functionality
-- Review permissions regularly as AI capabilities evolve
+- Use unique accounts per application or context  
+- Restrict file access to specific directories  
+- Manage API keys securely using environment variables  
+- Avoid hardcoding Gmail credentials in multi-user environments  
+- Secure web traffic and endpoints as needed  
+- Regularly audit permissions and access control settings
 
 ## Troubleshooting
 
-If you encounter issues with AI integration:
+If you encounter issues:
 
-1. Verify the MCP servers are running correctly
-2. Check that your AI application supports MCP integration
-3. Ensure the MCP configuration file uses correct paths for your system
-4. Confirm all required environment variables and credentials are set
-5. Check for firewall or network issues that might block connections
+1. Ensure the MCP server processes are running  
+2. Confirm your AI assistant supports MCP integration  
+3. Validate the `mcp_config.json` paths and options  
+4. Double-check environment variables and credentials  
+5. Investigate any local firewall or network rules
 
 ## Contributing
 
-Contributions to any of the MCP servers are welcome! Please follow the standard GitHub workflow and submit pull requests to the appropriate server repository.
+Contributions are welcome! Please submit pull requests to the relevant MCP server directory, following standard GitHub collaboration practices.
 
 ## License
 
-This collection of MCP servers is released under the MIT License. See individual server repositories for specific license details.
+This project is released under the MIT License. Refer to individual server directories for any specific licensing details.

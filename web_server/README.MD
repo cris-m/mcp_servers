@@ -2,6 +2,8 @@
 
 A Model Context Protocol (MCP) server for web operations that provides a secure and controlled way for AI assistants to interact with web content, search engines, and URLs.
 
+---
+
 ## Overview
 
 Web MCP is built on the [Model Context Protocol](https://github.com/modelcontextprotocol/python-sdk) and provides tools for:
@@ -13,6 +15,8 @@ Web MCP is built on the [Model Context Protocol](https://github.com/modelcontext
 
 The server includes support for multiple search engines and browser automation tools to enhance web content retrieval.
 
+---
+
 ## Features
 
 - **Multiple Search Engines**: Support for Tavily, Google, Bing, DuckDuckGo, and Wikipedia
@@ -22,6 +26,8 @@ The server includes support for multiple search engines and browser automation t
 - **JavaScript Support**: Option to load JavaScript-rendered content
 - **Browser Automation**: Support for Playwright and Selenium for advanced content retrieval
 - **Progress Tracking**: Support for progress reporting during long-running operations
+
+---
 
 ## Installation
 
@@ -39,6 +45,8 @@ The server includes support for multiple search engines and browser automation t
    ```bash
    python -m playwright install
    ```
+
+---
 
 ## Setting Up Search API Keys
 
@@ -77,6 +85,8 @@ The Web MCP server requires API keys for the search engines you want to use. Her
    export BING_SEARCH_URL=your_endpoint_url_here
    ```
 
+---
+
 ## Configuration
 
 The server can be configured in several ways:
@@ -94,7 +104,6 @@ export SEARCH_ENGINE=tavily
 export MAX_RESULTS=20
 export USER_AGENT="Mozilla/5.0..."
 export USE_PLAYWRIGHT=true
-python server.py
 ```
 
 ### MCP Configuration File (mcp.json)
@@ -131,6 +140,8 @@ python server.py
 - The `--search-engine` or `SEARCH_ENGINE` parameter is required
 - Depending on which search engine you choose, you'll need to set the appropriate API key environment variables
 
+---
+
 ## Security Features
 
 The Web MCP implements security measures:
@@ -140,6 +151,8 @@ The Web MCP implements security measures:
 - Progress reporting for transparency during operations
 - Error handling with detailed logging
 
+---
+
 ## Available Tools
 
 | Tool | Description |
@@ -148,6 +161,8 @@ The Web MCP implements security measures:
 | `load_url` | Loads content from one or more URLs with optional recursive loading |
 | `load_sitemap` | Extracts and loads content from a website's sitemap |
 | `configure_web` | Configures web client settings (search engine, user agent, etc.) |
+
+---
 
 ## Example Usage
 
@@ -169,6 +184,8 @@ Extract information from the sitemap at https://example.com/sitemap.xml
 Configure the web client to use Google search with 10 max results
 ```
 
+---
+
 ## Browser Automation Options
 
 The Web MCP server supports multiple approaches for loading web content:
@@ -179,6 +196,8 @@ The Web MCP server supports multiple approaches for loading web content:
 
 You can also enable JavaScript processing with the `--load-js` flag, which works in conjunction with browser automation.
 
+---
+
 ## Customization
 
 You can customize the server by modifying:
@@ -187,6 +206,8 @@ You can customize the server by modifying:
 - Default search engines and parameters
 - Browser automation behavior
 - Error handling and logging
+
+---
 
 ## Troubleshooting
 
@@ -197,6 +218,8 @@ If you encounter errors:
 3. Look for error messages in the server output (redirected to stderr)
 4. For Playwright or Selenium issues, ensure the browser dependencies are correctly installed
 
+---
+
 ## Contributing
 
 Contributions are welcome! Please follow the standard GitHub workflow:
@@ -204,6 +227,8 @@ Contributions are welcome! Please follow the standard GitHub workflow:
 1. Fork the repository
 2. Create a feature branch
 3. Submit a pull request with your changes
+
+---
 
 ## Running with Inspector
 

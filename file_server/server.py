@@ -151,12 +151,13 @@ class FileMCP:
             except Exception as e:
                 error_msg = f"Error: {str(e)}"
                 logging.error(f"{error_msg} - list_files({path}, {depth})")
+
                 if ctx:
                     ctx.error(error_msg)
                 return [error_msg]
 
         @self.mcp.tool()
-        def read_file(path: str, ctx: Context = None) -> str:
+        def read_file(path: str, ctx: Context = None):
             """
             Read file content.
 
@@ -180,9 +181,11 @@ class FileMCP:
             except Exception as e:
                 error_msg = f"Error: {str(e)}"
                 logging.error(f"{error_msg} - read_file({path})")
+
                 if ctx:
                     ctx.error(error_msg)
-                return error_msg
+
+                return {"success": False, "error": str(e)}
 
         @self.mcp.tool()
         def get_file_info(path: str, ctx: Context = None) -> dict:
@@ -208,9 +211,11 @@ class FileMCP:
             except Exception as e:
                 error_msg = str(e)
                 logging.error(f"Error: {error_msg} - get_file_info({path})")
+
                 if ctx:
                     ctx.error(f"Error getting file info: {error_msg}")
-                return {"error": error_msg}
+
+                return {"success": False, "error": error_msg}
 
         @self.mcp.tool()
         def get_file_mimetype(path: str, ctx: Context = None) -> str:
@@ -237,9 +242,11 @@ class FileMCP:
             except Exception as e:
                 error_msg = f"Error: {str(e)}"
                 logging.error(f"{error_msg} - get_file_mimetype({path})")
+
                 if ctx:
                     ctx.error(error_msg)
-                return error_msg
+
+                return {"success": False, "error": error_msg}
 
         @self.mcp.tool()
         def search_files_by_name(
@@ -273,8 +280,10 @@ class FileMCP:
             except Exception as e:
                 error_msg = f"Error: {str(e)}"
                 logging.error(f"{error_msg} - search_files_by_name({pattern}, {path})")
+
                 if ctx:
                     ctx.error(error_msg)
+
                 return [error_msg]
 
         @self.mcp.tool()
@@ -339,8 +348,10 @@ class FileMCP:
                 logging.error(
                     f"{error_msg} - search_files_by_content({query}, {path}, {is_regex}, {depth})"
                 )
+
                 if ctx:
                     ctx.error(error_msg)
+
                 return [error_msg]
 
     def run(self):

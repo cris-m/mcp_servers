@@ -101,10 +101,10 @@ class WebMCP:
                 }
             except Exception as e:
                 error_msg = f"Failed to load URLs: {str(e)}"
+                logging.error(error_msg)
+
                 if ctx:
                     ctx.error(error_msg)
-                else:
-                    logging.error(error_msg)
 
                 return {"success": False, "error": str(e)}
 
@@ -143,10 +143,10 @@ class WebMCP:
                 }
             except Exception as e:
                 error_msg = f"Failed to load sitemap: {str(e)}"
+                logging.error(error_msg)
+
                 if ctx:
                     ctx.error(error_msg)
-                else:
-                    logging.error(error_msg)
 
                 return {"success": False, "error": str(e)}
 
@@ -183,10 +183,10 @@ class WebMCP:
                 return {"success": True, "results": results}
             except Exception as e:
                 error_msg = f"Failed to perform search: {str(e)}"
+                logging.error(error_msg)
+
                 if ctx:
                     ctx.error(error_msg)
-                else:
-                    logging.error(error_msg)
 
                 return {"success": False, "error": str(e)}
 
@@ -265,10 +265,10 @@ class WebMCP:
                 }
             except Exception as e:
                 error_msg = f"Failed to configure web client: {str(e)}"
+                logging.error(error_msg)
+
                 if ctx:
                     ctx.error(error_msg)
-                else:
-                    logging.error(error_msg)
 
                 return {"success": False, "error": str(e)}
 

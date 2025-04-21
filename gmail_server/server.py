@@ -17,8 +17,8 @@ class GmailMCP:
         self.credentials_file = credentials_file
         self.token_file = token_file
 
-        self.mcp = FastMCP(name="Gmail MCP", version="1.0.0", request_timeout=30)
         self.gmail = None
+        self.mcp = FastMCP(name="Gmail MCP", version="1.0.0", request_timeout=30)
 
         self._init_gmail()
         self._register_tools()
@@ -95,11 +95,10 @@ class GmailMCP:
 
             except Exception as e:
                 error_msg = f"Failed to send email: {str(e)}"
+                logging.error(error_msg)
 
                 if ctx:
                     ctx.error(error_msg)
-                else:
-                    logging.error(error_msg)
 
                 return {"success": False, "error": str(e)}
 
@@ -162,8 +161,11 @@ class GmailMCP:
                     "next_page_token": result.get("next_page_token"),
                 }
             except Exception as e:
+                error_msg = f"Failed to list emails: {str(e)}"
+                logging.error(error_msg)
+
                 if ctx:
-                    ctx.error(f"Failed to list emails: {str(e)}")
+                    ctx.error(error_msg)
 
                 return {"success": False, "error": str(e)}
 
@@ -202,11 +204,10 @@ class GmailMCP:
                 return {"success": True, "emails": emails}
             except Exception as e:
                 error_msg = f"Failed to search emails: {str(e)}"
+                logging.error(error_msg)
 
                 if ctx:
                     ctx.error(error_msg)
-                else:
-                    logging.error(error_msg)
 
                 return {"success": False, "error": str(e)}
 
@@ -243,11 +244,10 @@ class GmailMCP:
                 return {"success": True, "emails": emails}
             except Exception as e:
                 error_msg = f"Failed to get unread emails: {str(e)}"
+                logging.error(error_msg)
 
                 if ctx:
                     ctx.error(error_msg)
-                else:
-                    logging.error(error_msg)
 
                 return {"success": False, "error": str(e)}
 
@@ -276,11 +276,10 @@ class GmailMCP:
                 return {"success": True, "result": result}
             except Exception as e:
                 error_msg = f"Failed to mark email as read: {str(e)}"
+                logging.error(error_msg)
 
                 if ctx:
                     ctx.error(error_msg)
-                else:
-                    logging.error(error_msg)
 
                 return {"success": False, "error": str(e)}
 
@@ -321,11 +320,10 @@ class GmailMCP:
                 return {"success": True, "result": result}
             except Exception as e:
                 error_msg = f"Failed to delete email: {str(e)}"
+                logging.error(error_msg)
 
                 if ctx:
                     ctx.error(error_msg)
-                else:
-                    logging.error(error_msg)
 
                 return {"success": False, "error": str(e)}
 
@@ -370,11 +368,10 @@ class GmailMCP:
                 return {"success": True, "result": result}
             except Exception as e:
                 error_msg = f"Failed to batch delete emails: {str(e)}"
+                logging.error(error_msg)
 
                 if ctx:
                     ctx.error(error_msg)
-                else:
-                    logging.error(error_msg)
 
                 return {"success": False, "error": str(e)}
 

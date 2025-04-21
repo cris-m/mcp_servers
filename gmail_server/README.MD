@@ -2,6 +2,8 @@
 
 A Model Context Protocol (MCP) server for Gmail operations that provides a secure and controlled way for AI assistants to interact with your Gmail account.
 
+---
+
 ## Overview
 
 Gmail MCP is built on the [Model Context Protocol](https://github.com/modelcontextprotocol/python-sdk) and provides tools for:
@@ -13,6 +15,8 @@ Gmail MCP is built on the [Model Context Protocol](https://github.com/modelconte
 
 The server includes robust authentication and provides a seamless interface between AI assistants and Gmail.
 
+---
+
 ## Features
 
 - **Email Management**: Send, list, search, and delete emails
@@ -21,6 +25,8 @@ The server includes robust authentication and provides a seamless interface betw
 - **Attachment Support**: Include file attachments in outgoing emails
 - **HTML Content**: Support for rich HTML email formatting
 - **Progress Tracking**: Support for progress reporting during operations
+
+---
 
 ## Installation
 
@@ -32,9 +38,11 @@ The server includes robust authentication and provides a seamless interface betw
    ```
 3. Install the required dependencies:
    ```bash
-   pip install "mcp[cli] dotenv"
+   pip install "mcp[cli] uv dotenv google-api-python-client google-auth-httplib2 google-auth-oauthlib"
    ```
 I'll add detailed instructions for creating Gmail API credentials and setting up the necessary scopes. Here's the additional section for your README:
+
+---
 
 ## Setting Up Gmail API Credentials
 
@@ -106,6 +114,7 @@ For subsequent runs, this token will be used automatically unless it expires or 
 - If working in a team environment, use environment variables rather than hardcoded paths
 - Consider implementing token refresh handling for long-running applications
 
+---
 
 ## Configuration
 
@@ -154,6 +163,8 @@ python server.py
 - If the token file doesn't exist, the application will initiate the OAuth authentication flow and save the resulting token to the specified location
 - For subsequent runs, the existing token will be used for authentication if valid, or refreshed if expired
 
+---
+
 ## Security Features
 
 The Gmail MCP implements security measures:
@@ -162,6 +173,8 @@ The Gmail MCP implements security measures:
 - Token management for maintaining authenticated sessions
 - Progress reporting for transparency during operations
 - Error handling with detailed logging
+
+---
 
 ## Available Tools
 
@@ -174,6 +187,8 @@ The Gmail MCP implements security measures:
 | `mark_as_read` | Marks a specific email as read |
 | `delete_email` | Deletes or moves an email to trash |
 | `batch_delete_emails` | Deletes multiple emails in a single operation |
+
+---
 
 ## Example Usage
 
@@ -195,6 +210,8 @@ Search for emails containing "project report" from last week
 Delete the email with ID 12345
 ```
 
+---
+
 ## Customization
 
 You can customize the server by modifying:
@@ -202,6 +219,8 @@ You can customize the server by modifying:
 - The Gmail manager implementation in `gmail.py`
 - Additional Gmail API functionality
 - Error handling and logging behavior
+
+---
 
 ## Troubleshooting
 
@@ -212,6 +231,8 @@ If you encounter errors:
 3. Look for error messages in the server output (redirected to stderr)
 4. Ensure the MCP configuration file has the correct format and paths
 
+---
+
 ## Contributing
 
 Contributions are welcome! Please follow the standard GitHub workflow:
@@ -219,6 +240,8 @@ Contributions are welcome! Please follow the standard GitHub workflow:
 1. Fork the repository
 2. Create a feature branch
 3. Submit a pull request with your changes
+
+---
 
 ## Running with Inspector
 

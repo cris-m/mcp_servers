@@ -2,6 +2,8 @@
 
 A Model Context Protocol (MCP) server for file system operations that provides a secure and controlled way for AI assistants to interact with your local file system.
 
+---
+
 ## Overview
 
 File Server MCP is built on the [Model Context Protocol](https://github.com/modelcontextprotocol/python-sdk) and provides tools for:
@@ -13,6 +15,8 @@ File Server MCP is built on the [Model Context Protocol](https://github.com/mode
 
 The server includes robust security features to prevent unauthorized access to sensitive files and directories.
 
+---
+
 ## Features
 
 - **Multiple Root Folders**: Configure one or more root folders that the AI assistant can access
@@ -20,6 +24,8 @@ The server includes robust security features to prevent unauthorized access to s
 - **Flexible Search**: Search files by name patterns or content (with regex support)
 - **Resource Access**: Expose file contents and directory listings as MCP resources
 - **Progress Tracking**: Support for progress reporting during long-running operations
+
+---
 
 ## Installation
 
@@ -33,6 +39,8 @@ The server includes robust security features to prevent unauthorized access to s
    ```bash
    pip install "mcp[cli] uv"
    ```
+
+---
 
 ## Configuration
 
@@ -71,6 +79,7 @@ python server.py
   }
 }
 ```
+---
 
 ## Security Features
 
@@ -82,6 +91,8 @@ The File Server MCP includes several security measures:
 - Size limits for file content searches to prevent processing extremely large files
 - Binary file detection to avoid processing non-text files
 
+---
+
 ## Available Tools
 
 | Tool | Description |
@@ -92,6 +103,8 @@ The File Server MCP includes several security measures:
 | `get_file_mimetype` | Determines the MIME type of a file |
 | `search_files_by_name` | Searches for files matching a name pattern |
 | `search_files_by_content` | Searches for files containing specific text or matching a regex pattern |
+
+---
 
 ## Example Usage
 
@@ -109,6 +122,8 @@ Search for files containing the word "important"
 Read the content of C:\Users\username\Documents\notes.txt
 ```
 
+---
+
 ## Customization
 
 You can customize the server by modifying:
@@ -116,6 +131,8 @@ You can customize the server by modifying:
 - Default ignore patterns for certain file types
 - Additional restricted directories or files
 - Search depth limits
+
+---
 
 ## Troubleshooting
 
@@ -126,6 +143,8 @@ If you encounter errors:
 3. Look for error messages in the server output (redirected to stderr)
 4. Ensure the MCP configuration file has the correct format and paths
 
+---
+
 ## Contributing
 
 Contributions are welcome! Please follow the standard GitHub workflow:
@@ -134,6 +153,7 @@ Contributions are welcome! Please follow the standard GitHub workflow:
 2. Create a feature branch
 3. Submit a pull request with your changes
 
+---
 
 ## Running with Inspector
 
