@@ -140,7 +140,7 @@ def main():
     parser.add_argument(
         "--sample-rate",
         type=int,
-        default=int(os.environ.get("VOICE_SAMPLE_RATE", 24000)),
+        default=int(os.environ.get("VOICE_SAMPLE_RATE", "24000")),
         help="Sample rate (env: VOICE_SAMPLE_RATE)",
     )
 
