@@ -2,6 +2,7 @@ import base64
 import mimetypes
 import os
 import pickle
+import traceback
 from email.encoders import encode_base64
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
@@ -61,6 +62,16 @@ class GmailManager:
 
         return build("gmail", "v1", credentials=self.creds)
 
+    def _get_email_details(self, msg_id):
+        message = (
+            self.service.users()
+            .messages()
+            .get(userId="me", id=msg_id, format="full")
+            .execute()
+        )
+
+        return message
+
     def list_emails(
         self,
         max_results=50,
@@ -100,10 +111,7 @@ class GmailManager:
             }
 
         except Exception as e:
-            import traceback
-
             error_details = traceback.format_exc()
-            print(f"Error listing emails: {str(e)}")
             print(error_details)
             return {
                 "messages": [],
@@ -111,16 +119,6 @@ class GmailManager:
                 "has_more": False,
                 "error": str(e),
             }
-
-    def get_email_details(self, msg_id):
-        message = (
-            self.service.users()
-            .messages()
-            .get(userId="me", id=msg_id, format="full")
-            .execute()
-        )
-
-        return message
 
     def parse_email_content(self, message):
         if "payload" not in message:
@@ -183,71 +181,12 @@ class GmailManager:
         messages = response.get("messages", [])
 
         for msg in messages:
-            message = self.get_email_details(msg["id"])
+            message = self._get_email_details(msg["id"])
             email_data = self.parse_email_content(message)
             if email_data:
                 emails.append(email_data)
 
         return emails
-
-    def search_emails(self, query, max_total=None):
-        try:
-            all_messages = []
-            page_token = None
-            results_per_page = min(100, max_total or 100)
-
-            while True:
-                result = self.list_emails(
-                    max_results=results_per_page, query=query, page_token=page_token
-                )
-
-                if "error" in result:
-                    return {
-                        "success": False,
-                        "error": result["error"],
-                        "message": "Error during paginated search",
-                    }
-
-                messages = result.get("messages", [])
-                all_messages.extend(messages)
-
-                if max_total and len(all_messages) >= max_total:
-                    all_messages = all_messages[:max_total]
-                    break
-
-                page_token = result.get("next_page_token")
-                if not page_token or not result.get("has_more", False):
-                    break
-
-            emails = []
-            for msg in all_messages:
-                try:
-                    message = self.get_email_details(msg["id"])
-                    email_data = self.parse_email_content(message)
-                    if email_data:
-                        emails.append(email_data)
-                except Exception as e:
-                    print(f"Error processing message {msg['id']}: {str(e)}")
-                    continue
-
-            return {
-                "success": True,
-                "emails": emails,
-                "count": len(emails),
-                "message": f"Found {len(emails)} emails matching query: '{query}'",
-            }
-
-        except Exception as e:
-            import traceback
-
-            error_details = traceback.format_exc()
-            print(f"Error in paginated search: {str(e)}")
-            print(error_details)
-            return {
-                "success": False,
-                "error": str(e),
-                "message": "Failed during paginated search",
-            }
 
     def mark_as_read(self, msg_id):
         return (
@@ -275,7 +214,6 @@ class GmailManager:
             file_metadata = {"name": os.path.basename(file_path)}
 
             media = MediaFileUpload(file_path, resumable=True)
-            print(f"Uploading {file_path} to Google Drive...")
             file = (
                 drive_service.files()
                 .create(body=file_metadata, media_body=media, fields="id,webViewLink")
@@ -288,47 +226,33 @@ class GmailManager:
                 fields="id",
             ).execute()
 
-            print(f"File uploaded to Drive. Link: {file['webViewLink']}")
             return file["webViewLink"]
-        except Exception as e:
-            print(f"Error uploading to Drive: {str(e)}")
-            import traceback
-
+        except Exception:
             traceback.print_exc()
             return None
 
     def _add_attachment(self, message, file_path):
         try:
-            file_size = os.path.getsize(file_path)
-            print(f"File exists. Size: {file_size} bytes")
-
             content_type, encoding = mimetypes.guess_type(file_path)
-            print(f"Detected content type: {content_type}, encoding: {encoding}")
 
             if content_type is None or encoding is not None:
                 content_type = "application/octet-stream"
-                print(f"Using default content type: {content_type}")
 
             main_type, sub_type = content_type.split("/", 1)
 
             with open(file_path, "rb") as file:
                 file_data = file.read()
-                print(f"Successfully read {len(file_data)} bytes from file")
 
             if main_type == "text":
                 attachment = MIMEText(file_data.decode("utf-8"), _subtype=sub_type)
-                print(f"Created text attachment with subtype {sub_type}")
             elif main_type == "image":
                 attachment = MIMEImage(file_data, _subtype=sub_type)
-                print(f"Created image attachment with subtype {sub_type}")
             elif main_type == "audio":
                 attachment = MIMEAudio(file_data, _subtype=sub_type)
-                print(f"Created audio attachment with subtype {sub_type}")
             else:
                 attachment = MIMEBase(main_type, sub_type)
                 attachment.set_payload(file_data)
                 encode_base64(attachment)
-                print(f"Created general attachment with type {main_type}/{sub_type}")
 
             filename = os.path.basename(file_path)
             attachment.add_header(
@@ -336,11 +260,7 @@ class GmailManager:
             )
             attachment.add_header("Content-Type", content_type)
             message.attach(attachment)
-            print(f"File {filename} successfully attached to message")
-        except Exception as e:
-            print(f"Error attaching file {file_path}: {str(e)}")
-            import traceback
-
+        except Exception:
             traceback.print_exc()
 
     def send_email(
@@ -369,22 +289,17 @@ class GmailManager:
         if attachments:
             for file_path in attachments:
                 if not os.path.exists(file_path):
-                    print(f"WARNING: Attachment file not found: {file_path}")
                     continue
 
                 file_size = os.path.getsize(file_path)
 
                 if file_size > self.MAX_ATTACHMENT_SIZE:
-                    print(
-                        f"File {file_path} is too large ({file_size/(1024*1024):.2f} MB). Uploading to Drive instead."
-                    )
                     drive_link = self.upload_to_drive(file_path)
                     if drive_link:
                         drive_links.append(
                             f"File: {os.path.basename(file_path)} - {drive_link}"
                         )
                 else:
-                    print(f"Attaching file: {file_path}")
                     self._add_attachment(message, file_path)
 
         if drive_links:
@@ -420,7 +335,6 @@ class GmailManager:
             .send(userId="me", body={"raw": raw_message})
             .execute()
         )
-        print(f"Message sent. Message ID: {result.get('id')}")
         return result
 
     def delete_email(self, msg_id, trash=True):
@@ -447,3 +361,165 @@ class GmailManager:
                 .batchDelete(userId="me", body={"ids": msg_ids})
                 .execute()
             )
+
+    def create_draft(
+        self, to, subject, body, cc=None, bcc=None, attachments=None, html_body=None
+    ):
+        message = MIMEMultipart("mixed")
+        message_alt = MIMEMultipart("alternative")
+
+        message["to"] = to if isinstance(to, str) else ", ".join(to)
+        message["subject"] = subject
+        if cc:
+            message["cc"] = cc if isinstance(cc, str) else ", ".join(cc)
+        if bcc:
+            message["bcc"] = bcc if isinstance(bcc, str) else ", ".join(bcc)
+
+        message_alt.attach(MIMEText(body, "plain"))
+
+        if html_body:
+            message_alt.attach(MIMEText(html_body, "html"))
+
+        message.attach(message_alt)
+
+        drive_links = []
+
+        if attachments:
+            for file_path in attachments:
+                if not os.path.exists(file_path):
+                    continue
+
+                file_size = os.path.getsize(file_path)
+
+                if file_size > self.MAX_ATTACHMENT_SIZE:
+
+                    drive_link = self.upload_to_drive(file_path)
+                    if drive_link:
+                        drive_links.append(
+                            f"File: {os.path.basename(file_path)} - {drive_link}"
+                        )
+                else:
+                    self._add_attachment(message, file_path)
+
+        if drive_links:
+            plain_part = None
+            html_part = None
+            for part in message_alt.get_payload():
+                if part.get_content_type() == "text/plain":
+                    plain_part = part
+                elif part.get_content_type() == "text/html":
+                    html_part = part
+
+            if plain_part:
+                drive_links_text = (
+                    "\n\nLarge files have been uploaded to Google Drive:\n"
+                    + "\n".join(drive_links)
+                )
+                plain_part.set_payload(plain_part.get_payload() + drive_links_text)
+
+            if html_part and html_body:
+                drive_links_html = "<br><br><strong>Large files have been uploaded to Google Drive:</strong><br><ul>"
+                for link in drive_links:
+                    file_name = link.split(" - ")[0].replace("File: ", "")
+                    url = link.split(" - ")[1]
+                    drive_links_html += f'<li><a href="{url}">{file_name}</a></li>'
+                drive_links_html += "</ul>"
+                html_part.set_payload(html_part.get_payload() + drive_links_html)
+
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
+
+        try:
+            draft = (
+                self.service.users()
+                .drafts()
+                .create(userId="me", body={"message": {"raw": raw_message}})
+                .execute()
+            )
+
+            return draft
+        except Exception as e:
+            traceback.print_exc()
+            return {"error": str(e)}
+
+    def get_message(self, msg_id):
+        try:
+            message = self._get_email_details(msg_id)
+            return self.parse_email_content(message)
+        except Exception as e:
+            traceback.print_exc()
+            return {"error": str(e)}
+
+    def get_thread(self, thread_id):
+        try:
+            thread = (
+                self.service.users().threads().get(userId="me", id=thread_id).execute()
+            )
+
+            messages = []
+            for message in thread.get("messages", []):
+                parsed_message = self.parse_email_content(message)
+                if parsed_message:
+                    messages.append(parsed_message)
+
+            return {
+                "thread_id": thread_id,
+                "messages": messages,
+                "count": len(messages),
+                "success": True,
+            }
+        except Exception as e:
+            traceback.print_exc()
+            return {
+                "thread_id": thread_id,
+                "messages": [],
+                "count": 0,
+                "success": False,
+                "error": str(e),
+            }
+
+    def search_emails(self, query, max_results=50):
+        try:
+            response = (
+                self.service.users()
+                .messages()
+                .list(userId="me", q=query, maxResults=max_results)
+                .execute()
+            )
+
+            messages = response.get("messages", [])
+
+            if not messages:
+                return {
+                    "success": True,
+                    "emails": [],
+                    "count": 0,
+                    "message": f"No emails found matching query: '{query}'",
+                }
+
+            emails = []
+            for msg in messages:
+                try:
+                    message = self._get_email_details(msg["id"])
+                    email_data = self.parse_email_content(message)
+                    if email_data:
+                        emails.append(email_data)
+                except Exception:
+                    continue
+
+            return {
+                "success": True,
+                "emails": emails,
+                "count": len(emails),
+                "message": f"Found {len(emails)} emails matching query: '{query}'",
+            }
+
+        except Exception as e:
+            error_details = traceback.format_exc()
+            print(error_details)
+            return {
+                "success": False,
+                "emails": [],
+                "count": 0,
+                "error": str(e),
+                "message": f"Failed to search for emails with query: '{query}'",
+            }

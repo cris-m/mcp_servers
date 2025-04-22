@@ -102,6 +102,75 @@ class GmailMCP:
 
                 return {"success": False, "error": str(e)}
 
+        @self.mcp.tool("create_draft_email")
+        def create_draft(
+            to: str,
+            subject: str,
+            body: str,
+            cc: str = None,
+            bcc: str = None,
+            attachments: list = None,
+            html_body: str = None,
+            ctx: Context = None,
+        ) -> Dict[str, Any]:
+            """Create a draft email in Gmail.
+
+            Args:
+                to: Recipient email address or comma-separated addresses
+                subject: Email subject
+                body: Plain text email body
+                cc: CC recipient(s), comma-separated if multiple
+                bcc: BCC recipient(s), comma-separated if multiple
+                attachments: List of file paths to attach
+                html_body: HTML version of the email body
+                ctx: MCP context object
+
+            Return:
+                Dictionary containing the draft details.
+            """
+            try:
+                if ctx:
+                    ctx.info(f"Creating draft email to: {to}")
+                    ctx.report_progress(0, 100)
+
+                    if attachments:
+                        ctx.info(f"Attaching {len(attachments)} file(s)")
+
+                if ctx:
+                    ctx.report_progress(25, 100)
+
+                result = self.gmail.create_draft(
+                    to=to,
+                    subject=subject,
+                    body=body,
+                    cc=cc,
+                    bcc=bcc,
+                    attachments=attachments,
+                    html_body=html_body,
+                )
+
+                if ctx:
+                    ctx.report_progress(100, 100)
+                    if "error" in result:
+                        ctx.error(f"Failed to create draft: {result['error']}")
+                    else:
+                        ctx.info(
+                            f"Draft created successfully with ID: {result.get('id')}"
+                        )
+
+                return (
+                    result if "error" in result else {"success": True, "draft": result}
+                )
+
+            except Exception as e:
+                error_msg = f"Failed to create draft: {str(e)}"
+                logging.error(error_msg)
+
+                if ctx:
+                    ctx.error(error_msg)
+
+                return {"success": False, "error": str(e)}
+
         @self.mcp.tool("list_emails")
         def list_emails(
             max_results: int = 50,
@@ -171,13 +240,13 @@ class GmailMCP:
 
         @self.mcp.tool("search_emails")
         def search_emails(
-            query: str, max_results: int = 50, ctx: Context = None
+            query: str, max_results: int = 100, ctx: Context = None
         ) -> Dict[str, Any]:
             """Search emails in Gmail using the provided query.
 
             Args:
                 query: Search string to find matching emails
-                max_results: Maximum number of emails to return (default: 50)
+                max_results: Maximum number of emails to return (default: 100)
                 ctx: MCP context object
 
             Return:
@@ -189,19 +258,15 @@ class GmailMCP:
                     ctx.info(f"Limiting results to {max_results} emails")
                     ctx.report_progress(10, 100)
 
-                if ctx:
-                    ctx.report_progress(30, 100)
-
-                emails = self.gmail.search_emails(query, max_results)
+                result = self.gmail.search_emails(query, max_results)
 
                 if ctx:
-                    ctx.report_progress(80, 100)
-                    found_count = len(emails) if emails else 0
-                    ctx.info(f"Search complete. Found {found_count} matching emails")
-
                     ctx.report_progress(100, 100)
+                    ctx.info(
+                        f"Search complete. Found {result.get('count', 0)} matching emails"
+                    )
 
-                return {"success": True, "emails": emails}
+                return result
             except Exception as e:
                 error_msg = f"Failed to search emails: {str(e)}"
                 logging.error(error_msg)
@@ -211,9 +276,89 @@ class GmailMCP:
 
                 return {"success": False, "error": str(e)}
 
+        @self.mcp.tool("get_message")
+        def get_message(msg_id: str, ctx: Context = None) -> Dict[str, Any]:
+            """Get details of a specific email.
+
+            Args:
+                msg_id: The ID of the message to retrieve
+                ctx: MCP context object
+
+            Return:
+                Dictionary containing the email details
+            """
+            try:
+                if ctx:
+                    ctx.info(f"Retrieving message with ID: {msg_id}")
+                    ctx.report_progress(0, 100)
+
+                result = self.gmail.get_message(msg_id)
+
+                if ctx:
+                    ctx.report_progress(100, 100)
+                    if "error" in result:
+                        ctx.error(f"Failed to retrieve message: {result['error']}")
+                    else:
+                        ctx.info(
+                            f"Message retrieved successfully: {result.get('subject', '')}"
+                        )
+
+                return (
+                    result
+                    if "error" in result
+                    else {"success": True, "message": result}
+                )
+            except Exception as e:
+                error_msg = f"Failed to get message: {str(e)}"
+                logging.error(error_msg)
+
+                if ctx:
+                    ctx.error(error_msg)
+
+                return {"success": False, "error": str(e)}
+
+        @self.mcp.tool("get_thread")
+        def get_thread(thread_id: str, ctx: Context = None) -> Dict[str, Any]:
+            """Get all messages in a thread.
+
+            Args:
+                thread_id: The ID of the thread to retrieve
+                ctx: MCP context object
+
+            Return:
+                Dictionary containing the thread details and messages
+            """
+            try:
+                if ctx:
+                    ctx.info(f"Retrieving thread with ID: {thread_id}")
+                    ctx.report_progress(0, 100)
+
+                result = self.gmail.get_thread(thread_id)
+
+                if ctx:
+                    ctx.report_progress(100, 100)
+                    if not result.get("success", True):
+                        ctx.error(
+                            f"Failed to retrieve thread: {result.get('error', 'Unknown error')}"
+                        )
+                    else:
+                        ctx.info(
+                            f"Thread retrieved successfully with {result.get('count', 0)} messages"
+                        )
+
+                return result
+            except Exception as e:
+                error_msg = f"Failed to get thread: {str(e)}"
+                logging.error(error_msg)
+
+                if ctx:
+                    ctx.error(error_msg)
+
+                return {"success": False, "error": str(e)}
+
         @self.mcp.tool("get_unread_emails")
         def get_unread_emails(
-            max_results: int = 50, ctx: Context = None
+            max_results: int = 100, ctx: Context = None
         ) -> Dict[str, Any]:
             """Get a list of unread emails.
 
