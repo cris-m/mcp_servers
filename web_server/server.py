@@ -31,8 +31,10 @@ class WebMCP:
 
         self.mcp = FastMCP(name="Web MCP", version="1.0.0", request_timeout=360)
         self.web = None
+
         self._init_web()
         self._register_tools()
+
         logging.info("Web MCP initialized")
 
     def _setup_logging(self):

@@ -7,7 +7,7 @@ A collection of Model Context Protocol (MCP) servers designed to extend AI assis
 This repository hosts several MCP servers built on the [Model Context Protocol](https://github.com/modelcontextprotocol/python-sdk) framework. Each server enables AI assistants to interact with various external systems:
 
 - **File MCP**: Access and manipulate files on the local file system  
-- **Gmail MCP**: Manage and interact with Gmail accounts  
+- **Google MCP**: Manage and interact with Google services (Gmail, Drive, Calendar)  
 - **Web MCP**: Search the internet and retrieve online content  
 - **Voice MCP**: Generate lifelike text-to-speech audio using advanced voice synthesis
 
@@ -15,7 +15,7 @@ These servers are compatible with MCP-enabled AI tools such as Cursor, Claude De
 
 ## Features
 
-- **AI Integration**: Seamlessly extend AI assistants with file, email, web, and voice capabilities  
+- **AI Integration**: Seamlessly extend AI assistants with file, Google services, web, and voice capabilities  
 - **Modular Architecture**: Deploy servers independently or in combination  
 - **Secure Access**: Built-in security controls to safeguard sensitive systems  
 - **Rich Functionality**: Comprehensive toolsets tailored to each domain  
@@ -71,12 +71,15 @@ Define root folders accessible by the assistant:
 export MCP_ROOT_FOLDERS="/path/to/folder1;/path/to/folder2"
 ```
 
-### Gmail MCP
+### Google MCP
 
 Requires Google API credentials and token:
 ```bash
-export GMAIL_CREDENTIALS_PATH="/path/to/credentials.json"
-export GMAIL_TOKEN_PATH="/path/to/token.pickle"
+export GOOGLE_CREDENTIALS_PATH="/path/to/credentials.json"
+export GOOGLE_TOKEN_PATH="/path/to/token.pickle"
+export ENABLE_GMAIL="true"
+export ENABLE_DRIVE="true"
+export ENABLE_CALENDAR="true"
 ```
 
 ### Web MCP
@@ -135,13 +138,16 @@ Create an `mcp_config.json` file with your server configurations:
         "/path/to/folder2"
       ]
     },
-    "gmail-mcp": {
+    "google-mcp": {
       "command": "python",
       "args": [
-        "gmail_server.py",
-        "--gmail-credentials",
+        "server.py",
+        "--gmail",
+        "--drive",
+        "--calendar",
+        "--credentials",
         "/path/to/credentials.json",
-        "--gmail-token",
+        "--token",
         "/path/to/token.pickle"
       ]
     },
@@ -188,14 +194,36 @@ Create an `mcp_config.json` file with your server configurations:
 - `search_files_by_name`: Search by filename  
 - `search_files_by_content`: Search by file content
 
-### Gmail MCP
-- `send_email`: Send messages with attachments  
-- `list_emails`: View inbox or folders  
-- `search_emails`: Find specific emails  
-- `get_unread_emails`: Check unread messages  
-- `mark_as_read`: Mark messages as read  
-- `delete_email`: Remove specific emails  
-- `batch_delete_emails`: Bulk delete emails
+### Google MCP
+- **Gmail**:
+  - `send_email`: Send messages with attachments  
+  - `create_draft_email`: Prepare drafts for later use
+  - `list_emails`: View inbox or folders  
+  - `search_emails`: Find specific emails  
+  - `get_unread_emails`: Check unread messages  
+  - `mark_as_read`/`mark_as_unread`: Manage message status  
+  - `delete_email`: Remove specific emails  
+  - `batch_delete_emails`: Bulk delete emails  
+  - `get_labels`: Retrieve available labels
+
+- **Drive**:
+  - `list_drive_files`: Browse files and folders
+  - `search_drive_files`: Find content in Drive
+  - `upload_file`: Add new files to Drive
+  - `download_file`: Save Drive files locally
+  - `create_folder`: Organize content in folders
+  - `get_file_permissions`: Check sharing settings
+  - `share_file`: Control access to files
+  - `get_drive_storage_info`: Check quota usage
+
+- **Calendar**:
+  - `create_meeting`: Schedule new events
+  - `update_meeting`: Modify existing events
+  - `get_meetings_by_date`: View day's schedule
+  - `get_available_time_slots`: Find free time
+  - `invite_to_meeting`: Add attendees
+  - `delete_meeting`: Remove events
+  - `create_bulk_meetings`: Schedule multiple events
 
 ### Web MCP
 - `search`: Perform search queries  
@@ -224,7 +252,11 @@ With all MCP servers active, assistants can execute natural-language commands li
 ```
 
 ```
-"Draft an email to my team with the quarterly report from my Documents folder attached"
+"Schedule a team meeting for tomorrow at 2pm and send calendar invites to my marketing team"
+```
+
+```
+"Upload the quarterly report to my Google Drive and share it with the finance department"
 ```
 
 ## Security Considerations
@@ -234,7 +266,7 @@ To ensure secure deployment:
 - Use unique accounts per application or context  
 - Restrict file access to specific directories  
 - Manage API keys securely using environment variables  
-- Avoid hardcoding Gmail credentials in multi-user environments  
+- Avoid hardcoding Google credentials in multi-user environments  
 - Secure web traffic and endpoints as needed  
 - Regularly audit permissions and access control settings
 

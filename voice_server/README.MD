@@ -33,7 +33,7 @@ A **Model Context Protocol (MCP)** server for voice-related operations, offering
 2. **Python Environment**  
    ```bash
    git clone <repository-url>
-   cd voice-mcp
+   cd voice_mcp
    python -m venv env
    source env/bin/activate      # Windows: env\Scripts\activate
    pip install --upgrade pip
@@ -68,7 +68,7 @@ export VOICE_SAMPLE_RATE=24000
 ```json
 {
   "mcpServers": {
-    "voice-mcp": {
+    "voice_mcp": {
       "command": "python",
       "args": ["voice_server.py", "--lang", "us", "--voice", "af_nicole"],
       "env": {

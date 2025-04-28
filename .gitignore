@@ -136,3 +136,6 @@ cython_debug/
 client_secret.json
 token.pickle
 mcp.json
+
+# project folder
+time_server
